@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2b7a67">
+<title>MidiTrack • ผู้ช่วยเตือนกินยา</title>
+<!-- เปลี่ยนฟอนต์ใหม่เป็น Sarabun + Nunito (น่ารักละมุนตา อ่านง่าย ชัดเจน) -->
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#d8f3ec;--line:#a4dcd0;--text:#1b3d35;--muted:#5f857b;--brand:#2b7a67;--brand-light:#edf7f5;--soft:#e3f4f0;--warn:#d97736;--danger:#cc4444;--ok:#2e8b57;--r:26px;--sh:0 8px 25px rgba(43,122,103,.08)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+body{
+  margin:0;
+  background-color: #c9ebd9;
+  background-image: 
+    radial-gradient(circle at 15% 20%, rgba(135, 206, 235, 0.25) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(46, 139, 87, 0.2) 0%, transparent 40%),
+    linear-gradient(135deg, #daf4ea 0%, #ccefe1 50%, #b8e6d5 100%);
+  background-attachment: fixed;
+  color:var(--text);
+  /* ใช้ฟอนต์ Sarabun และ Nunito เพื่อความน่ารักละมุนแบบพอดีๆ อ่านง่ายสบายตา */
+  font-family:"Sarabun", "Nunito", "Segoe UI", system-ui, sans-serif;
+  padding-bottom:110px;
+  line-height:1.6;
+  position: relative;
+}
+
+/* ลวดลายป่าสนธรรมชาติมินิมอลรอบด้าน */
+body::before {
+  content: "🌲 🌲 🌿 🌲 🌲 🌿 🌲 🌲 🌿 🌲 🌲";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 8px;
+  text-align: center;
+  font-size: 15px;
+  letter-spacing: 20px;
+  opacity: 0.35;
+  z-index: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+body::after {
+  content: "🌲 🍃 🌲 🌲 🌿 🌲 🌲 🍃 🌲 🌲 🌿";
+  position: fixed;
+  bottom: 65px;
+  left: 0;
+  right: 0;
+  padding: 8px;
+  text-align: center;
+  font-size: 15px;
+  letter-spacing: 20px;
+  opacity: 0.35;
+  z-index: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+button,input,select{font-family:inherit}
+
+header{position:sticky;top:0;z-index:40;background:rgba(235, 249, 244, .9);backdrop-filter:blur(12px);border-bottom:2px dashed var(--line);padding:14px 20px}
+.brand{display:flex;align-items:center;gap:12px; position:relative; z-index:1;}
+.logo{width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg, var(--brand), #3ca389);display:grid;place-items:center;color:#fff;font-weight:700;box-shadow:0 4px 12px rgba(43,122,103,.25);position:relative}
+.logo::after{content:'🌲';position:absolute;font-size:11px;bottom:-4px;right:-4px}
+.brand h1{font-size:18px;margin:0;letter-spacing:-.3px;color:#1b3d35;font-weight:700;}
+.brand small{display:block;color:var(--muted);font-size:11.5px}
+.chip{margin-left:auto;font-size:11.5px;padding:6px 12px;border-radius:999px;background:#e1f5ee;color:var(--muted);border:1.5px solid var(--line);transition:.2s}
+.chip.on{background:#e2f9ed;color:var(--ok);border-color:#a3e4c1}
+
+main{padding:20px 16px;max-width:680px;margin:0 auto; position:relative; z-index:1;}
+
+/* วิจิทต้อนรับบรรยากาศป่าสน */
+.garden-widget {
+  background: linear-gradient(135deg, #eafaf4, #daf4ea);
+  border: 2px dashed #b5e4d5;
+  border-radius: var(--r);
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--sh);
+}
+.garden-avatar {
+  font-size: 32px;
+  background: #fff;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(43,122,103,.1);
+  flex-shrink: 0;
+}
+.garden-text b { display: block; font-size: 14.5px; color: #1b3d35; }
+.garden-text span { font-size: 12.5px; color: var(--muted); }
+
+.page{display:none}.page.active{display:block}
+
+.hero{
+  background:linear-gradient(135deg,#2b7a67,#3ca389,#2e8b57);
+  color:#fff;
+  border-radius:var(--r);
+  padding:24px 22px;
+  margin-bottom:22px;
+  box-shadow:0 14px 36px rgba(43,122,103,.28);
+  position:relative;
+  overflow:hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '✨';
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  font-size: 18px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.hero .big{font-size:28px;font-weight:700;margin:6px 0 3px;letter-spacing:-.5px;position:relative;z-index:2;}
+.hero .lbl{font-size:12px;opacity:.9;text-transform:uppercase;letter-spacing:.5px;position:relative;z-index:2;}
+.hero .sub{font-size:13.5px;opacity:.95;position:relative;z-index:2;}
+
+/* เครื่องหมายบวกทางการแพทย์โปร่งแสง (Watermark) */
+.hero-trees {
+  position: absolute;
+  right: 18px;
+  bottom: -10px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.18;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.08));
+}
+.hero-tree-sm {
+  font-size: 54px;
+}
+.hero-tree-lg {
+  font-size: 96px;
+}
+
+.sec{font-size:14px;color:#1b3d35;margin:24px 0 12px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sec::before{content:'🌿';font-size:12px}
+.count{background:var(--brand-light);color:var(--brand);padding:2px 10px;border-radius:999px;font-size:11.5px;font-weight:600;border:1px solid var(--line)}
+
+.box{background:rgba(244, 253, 249, .95);backdrop-filter:blur(6px);border:2px solid #b5e4d5;border-radius:35px 22px 35px 22px;padding:22px;margin-bottom:16px;box-shadow:var(--sh)}
+.wrap{background:rgba(244, 253, 249, .95);backdrop-filter:blur(6px);border:2px solid #b5e4d5;border-radius:24px;box-shadow:var(--sh);overflow-x:auto;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px}
+th{background:var(--brand-light);color:var(--brand);font-size:13px;text-align:left;padding:14px 16px;white-space:nowrap;font-weight:700}
+td{padding:14px 16px;border-top:1px solid #ccefe1}
+tr:nth-child(even) td{background:rgba(235, 249, 244, .6)}
+tr.done td{color:var(--muted)}tr.done .nm{text-decoration:line-through;opacity:.7}
+.tm{font-weight:700;color:var(--brand);white-space:nowrap}
+tr.late .tm{color:var(--warn)}
+.nm{font-weight:600;min-width:130px}
+.ct{text-align:center;white-space:nowrap}
+tr.flash td{animation:fl 2.4s ease}
+@keyframes fl{0%,60%{background:#d2f4e4}100%{background:transparent}}
+
+.bdg{display:inline-block;font-size:11.5px;font-weight:600;padding:4px 12px;border-radius:999px;white-space:nowrap}
+.w{background:#e8f4f1;color:var(--muted)}.d{background:#e2f9ed;color:var(--ok)}.l{background:#fef0e6;color:var(--warn)}
+
+.mini{border:none;background:var(--brand);color:#fff;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 3px 8px rgba(43,122,103,.15);transition:.15s}
+.mini:hover{opacity:.9}
+.mini.un{background:#e1f5ee;color:var(--muted);border:1.5px solid var(--line);box-shadow:none}
+.mini.del{background:#fdecec;color:var(--danger);border:1.5px solid #f8dcdc;box-shadow:none}
+
+.dot{width:8px;height:8px;border-radius:50%;background:var(--brand);display:inline-block;box-shadow:0 0 0 3px var(--brand-light)}
+.note{font-size:12.5px;color:var(--muted);text-align:center;margin:6px 0 18px}
+.empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:14px}
+
+label{display:block;font-size:13.5px;font-weight:600;margin:16px 0 6px;color:#1b3d35}
+input,select{width:100%;padding:13px 16px;border:2px solid #b5e4d5;border-radius:16px;font-size:15px;background:#fff;outline:none;transition:.2s;color:#1b3d35}
+input:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(43,122,103,.12)}
+input.bad{border-color:var(--danger);background:#fff6f6}
+
+.row{display:flex;gap:12px}.row>div{flex:1}
+.tlist{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ttag{background:var(--brand-light);color:var(--brand);padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;border:1.5px solid #b5e4d5}
+.ttag b{cursor:pointer;opacity:.6;padding:0 4px}
+.ttag b:hover{opacity:1}
+
+.quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.quick button{border:1.5px dashed #8ecdb9;background:#fff;color:var(--brand);border-radius:999px;padding:7px 14px;font-size:12px;cursor:pointer;font-weight:600;transition:.15s}
+.quick button:hover{background:var(--brand-light)}
+
+.hint{font-size:12.5px;color:var(--muted);margin-top:8px}
+.err{display:none;background:#fdecec;border:1.5px solid #f8dcdc;color:var(--danger);border-radius:14px;padding:12px 14px;font-size:13px;font-weight:600;margin-top:16px}
+.err.on{display:block}
+
+.btn{width:100%;padding:15px;border:none;border-radius:16px;background:var(--brand);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:18px;box-shadow:0 5px 15px rgba(43,122,103,.25);transition:.15s}
+.btn:hover{opacity:.95;transform:translateY(-1px)}
+.btn.gh{background:#fff;color:var(--brand);border:2px solid var(--brand);margin-top:10px;box-shadow:none}
+.btn.gh:hover{background:var(--brand-light)}
+.btn.sm{width:auto;padding:12px 18px;font-size:13px;margin-top:0}
+.btn.gy{background:#e1f5ee;color:var(--muted);border:1.5px solid var(--line);box-shadow:none}
+
+/* ปุ่มเมนูด้านล่างแนวใบไม้การ์ตูนน่ารัก สีเขียวอ่อน */
+nav{position:fixed;bottom:0;left:0;right:0;background:rgba(235, 249, 244, .95);backdrop-filter:blur(12px);border-top:2px dashed var(--line);display:flex;padding:10px 0 16px;z-index:100}
+nav button{flex:1;background:none;border:none;padding:6px 0;color:var(--muted);font-size:12px;cursor:pointer;transition:.15s}
+nav button i{display:block;font-size:22px;font-style:normal;margin-bottom:2px;pointer-events:none}
+nav button span{pointer-events:none;font-weight:600}
+nav button.active{color:var(--brand);transform:scale(1.08)}
+
+#alarm{position:fixed;inset:0;background:rgba(43,122,103,.96);backdrop-filter:blur(8px);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:28px}
+#alarm.on{display:flex}
+.bell{font-size:68px;animation:rg .9s infinite}
+@keyframes rg{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
+#alarm h2{font-size:16px;font-weight:500;opacity:.9;margin:16px 0 4px}
+#aName{font-size:32px;font-weight:800;letter-spacing:-.5px}#aAmt{font-size:20px;margin:6px 0 6px;opacity:.95}#aNote{opacity:.85;font-size:14px}
+.acts{margin-top:36px;width:100%;max-width:300px}
+.acts button{width:100%;padding:16px;border-radius:16px;border:none;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.ok{background:#fff;color:var(--brand)}
+.sz{background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.6)}
+
+#toast{position:fixed;bottom:115px;left:50%;transform:translateX(-50%);background:#1b3d35;color:#fff;padding:12px 22px;border-radius:999px;font-size:13.5px;opacity:0;transition:.3s;z-index:150;pointer-events:none;max-width:88%;text-align:center;box-shadow:0 6px 16px rgba(0,0,0,.15)}
+#toast.on{opacity:1}
+#bug{display:none;position:fixed;top:0;left:0;right:0;background:#cc4444;color:#fff;font-size:12px;padding:9px 14px;z-index:300;text-align:center}
+
+@media print{header,nav,.btn,.mini,.note{display:none!important}body{padding:0}.page{display:block!important}}
+</style>
+</head>
+<body>
+<div id="bug"></div>
+
+<header><div class="brand">
+  <div class="logo">✚</div>
+  <div><h1>MediTrack</h1><small>ผู้ช่วยเตือนกินยาอัจฉริยะ</small></div>
+  <div class="chip" id="chip">● ยังไม่เชื่อมต่อ</div>
+</div></header>
+
+<main>
+  <!-- วิจิททักทายป่าสนธรรมชาติ -->
+  <div class="garden-widget">
+    <div class="garden-avatar">👵🏼</div>
+    <div class="garden-text">
+      <b>ดูแลด้วยรัก MediTrack</b>
+      <span>"ทานยาตรงเวลา ร่างกายแข็งแรง สุขกายสบายใจในทุกๆวัน"</span>
+    </div>
+  </div>
+
+<!-- วันนี้ -->
+<section class="page active" id="p-today">
+  <div class="hero">
+    <div class="lbl">มื้อยาถัดไป</div>
+    <div class="big" id="nxName">—</div>
+    <div class="sub" id="nxInfo">ยังไม่มีรายการยาในระบบ</div>
+    
+    <!-- เครื่องหมายบวกทางการแพทย์โปร่งแสง (Watermark) ขนาดเล็กและใหญ่ -->
+    <div class="hero-trees">
+      <span class="hero-tree-sm">✚</span>
+      <span class="hero-tree-lg">✚</span>
+    </div>
+  </div>
+  <div class="sec">ตารางกินยาวันนี้ · <span id="dt"></span></div>
+  <div class="wrap"><table>
+    <thead><tr><th>เวลา</th><th>ชื่อยา</th><th class="ct">จำนวน</th><th>ช่วง</th><th>สถานะ</th><th></th></tr></thead>
+    <tbody id="tbSched"></tbody>
+  </table></div>
+  <div class="note">← เลื่อนตารางแนวนอนได้บนมือถือ →</div>
+
+  <div class="sec">สรุปมื้อยา (ผังรวม)</div>
+  <div class="wrap"><table>
+    <thead><tr><th>ชื่อยา</th><th class="ct">เช้า</th><th class="ct">กลางวัน</th><th class="ct">เย็น</th><th class="ct">ก่อนนอน</th><th class="ct">รวม/วัน</th></tr></thead>
+    <tbody id="tbMx"></tbody>
+  </table></div>
+</section>
+
+<!-- เพิ่มยา -->
+<section class="page" id="p-add">
+  <div class="sec">ลงทะเบียนยาเข้าระบบ</div>
+  <div class="box">
+    <label for="mName">ชื่อยา *</label>
+    <input id="mName" type="text" placeholder="เช่น Paracetamol 500 mg">
+    <div class="row">
+      <div><label for="mAmt">จำนวน (เม็ด/ครั้ง)</label><input id="mAmt" type="number" min="0.5" step="0.5" value="1"></div>
+      <div><label for="mMeal">ช่วงเวลา</label><select id="mMeal">
+        <option>ก่อนอาหาร</option><option>หลังอาหาร</option><option>พร้อมอาหาร</option><option>ก่อนนอน</option>
+      </select></div>
+    </div>
+    <label for="mTime">เวลาที่ต้องกิน *</label>
+    <div class="row">
+      <div><input id="mTime" type="time" value="08:00"></div>
+      <button type="button" class="btn sm" onclick="addTime()">+ เพิ่ม</button>
+    </div>
+    <div class="quick">
+      <button type="button" onclick="addTime('08:00')">เช้า 08:00</button>
+      <button type="button" onclick="addTime('12:00')">กลางวัน 12:00</button>
+      <button type="button" onclick="addTime('18:00')">เย็น 18:00</button>
+      <button type="button" onclick="addTime('21:00')">ก่อนนอน 21:00</button>
+    </div>
+    <div class="tlist" id="tlist"></div>
+    <div class="hint">ถ้าไม่กด “+ เพิ่ม” ระบบจะใช้เวลาในช่องด้านบนให้อัตโนมัติ</div>
+    <div class="err" id="fErr"></div>
+    <button type="button" class="btn" onclick="saveMed()">บันทึกเข้าระบบ</button>
+  </div>
+
+  <div class="sec">ตารางการกินยาที่ลงทะเบียนแล้ว <span class="count" id="c1">0 รายการ</span></div>
+  <div class="wrap"><table>
+    <thead><tr><th>#</th><th>ชื่อยา</th><th class="ct">จำนวน</th><th>ช่วง</th><th>เวลาที่ต้องกิน</th><th></th></tr></thead>
+    <tbody id="tbAdd"></tbody>
+  </table></div>
+  <div class="note">ตารางนี้อัปเดตทันทีเมื่อกดบันทึก</div>
+</section>
+
+<!-- รายการยา -->
+<section class="page" id="p-list">
+  <div class="sec">ยาทั้งหมดในระบบ <span class="count" id="c2">0 รายการ</span></div>
+  <div class="wrap"><table>
+    <thead><tr><th>ชื่อยา</th><th class="ct">เม็ด/ครั้ง</th><th>ช่วง</th><th>เวลา</th><th class="ct">ครั้ง/วัน</th><th></th></tr></thead>
+    <tbody id="tbList"></tbody>
+  </table></div>
+  <button type="button" class="btn gh" onclick="window.print()">🖨 พิมพ์ตารางกินยา</button>
+</section>
+
+<!-- อุปกรณ์ -->
+<section class="page" id="p-dev">
+  <div class="sec">เชื่อมต่อกล่องยา</div>
+  <div class="box" style="text-align:center">
+    <div style="font-size:44px;margin-bottom:6px">📦</div>
+    <div style="font-weight:700" id="devName">ยังไม่ได้เชื่อมต่ออุปกรณ์</div>
+    <div style="font-size:12.5px;color:var(--muted);margin-top:6px">เชื่อมต่อผ่าน Bluetooth เพื่อให้กล่องส่งเสียงและไฟกะพริบเมื่อถึงเวลา</div>
+    <button type="button" class="btn" onclick="connectBLE()">🔗 ค้นหา &amp; เชื่อมต่อ</button>
+    <button type="button" class="btn gh" onclick="testBox()">🔊 ทดสอบเสียงกล่องยา</button>
+    <button type="button" class="btn gh" onclick="disconnectBLE()">ตัดการเชื่อมต่อ</button>
+  </div>
+  <div class="sec">การแจ้งเตือน</div>
+  <div class="box">
+    <button type="button" class="btn gh" style="margin-top:0" onclick="askNoti()">🔔 เปิดสิทธิ์แจ้งเตือน</button>
+    <button type="button" class="btn gh" onclick="beep(3)">🔈 ทดสอบเสียงเตือนในเว็บ</button>
+    <button type="button" class="btn gh gy" onclick="resetToday()">↺ รีเซ็ตสถานะ "กินแล้ว" ของวันนี้</button>
+  </div>
+</section>
+</main>
+
+<nav>
+  <button type="button" id="n-today" class="active" onclick="goPage('today')"><i>🌲</i><span>วันนี้</span></button>
+  <button type="button" id="n-add" onclick="goPage('add')"><i>🌱</i><span>เพิ่มยา</span></button>
+  <button type="button" id="n-list" onclick="goPage('list')"><i>💊</i><span>รายการ</span></button>
+  <button type="button" id="n-dev" onclick="goPage('dev')"><i>🌿</i><span>อุปกรณ์</span></button>
+</nav>
+
+<div id="alarm">
+  <div class="bell">🔔</div>
+  <h2>ถึงเวลากินยาแล้ว</h2>
+  <div id="aName">—</div><div id="aAmt">—</div><div id="aNote">—</div>
+  <div class="acts">
+    <button type="button" class="ok" onclick="aTake()">✓ กินยาแล้ว</button>
+    <button type="button" class="sz" onclick="aSnooze()">เลื่อนไป 5 นาที</button>
+  </div>
+</div>
+<div id="toast"></div>
+
+<!-- Firebase SDK แบบ compat เพื่อให้ทำงานกับเว็บ HTML ไฟล์เดียวและ onclick เดิมได้ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBDkfQOza1FHgtsR8rx5EowBafeVgSuxVQ",
+  authDomain: "meditrack-7c30c.firebaseapp.com",
+  databaseURL: "https://meditrack-7c30c-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "meditrack-7c30c",
+  storageBucket: "meditrack-7c30c.firebasestorage.app",
+  messagingSenderId: "64174433577",
+  appId: "1:64174433577:web:58d75675d703ba0d290338",
+  measurementId: "G-JQYMXSPCSW"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+</script>
+
+<script>
+window.onerror=function(m,s,l){var b=document.getElementById('bug');b.style.display='block';b.textContent='⚠ '+m+' (บรรทัด '+l+')';};
+function $(i){return document.getElementById(i);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function pad(n){n=String(n);return n.length<2?'0'+n:n;}
+
+var meds=[],taken={},times=[],snz={},cur=null,flash=null;
+try{meds=JSON.parse(localStorage.getItem('mb_meds')||'[]')||[];}catch(e){meds=[];}
+try{taken=JSON.parse(localStorage.getItem('mb_taken')||'{}')||{};}catch(e){taken={};}
+if(!Array.isArray(meds)) meds=[];
+
+// Firebase connection state: anonymous authentication keeps data private to this browser UID.
+var fbUid=null,fbRef=null,fbReady=false,fbLoading=false,fbListener=null;
+function fbStatus(message, online){
+  $('chip').className='chip'+(online?' on':'');
+  $('chip').textContent=message;
+}
+function normalizeMeds(value){
+  if(Array.isArray(value)) return value;
+  if(value && typeof value==='object') return Object.keys(value).map(function(k){return value[k];});
+  return [];
+}
+function localCacheSave(){
+  try{
+    localStorage.setItem('mb_meds',JSON.stringify(meds));
+    localStorage.setItem('mb_taken',JSON.stringify(taken));
+  }catch(e){console.warn('Local cache:',e);}
+}
+function fbStart(){
+  fbStatus('● กำลังเชื่อม Firebase…',false);
+  firebase.auth().onAuthStateChanged(function(user){
+    if(!user){
+      firebase.auth().signInAnonymously().catch(function(error){
+        fbStatus('● Firebase เข้าสู่ระบบไม่สำเร็จ',false);
+        console.error('Firebase Auth:',error);
+      });
+      return;
+    }
+    if(fbUid===user.uid && fbReady) return;
+    fbUid=user.uid;
+    fbRef=firebase.database().ref('users/'+fbUid+'/meditrack');
+    fbReady=false;fbLoading=true;
+    fbRef.once('value').then(function(snapshot){
+      var remote=snapshot.val();
+      if(remote && typeof remote==='object'){
+        meds=normalizeMeds(remote.meds);
+        taken=(remote.taken && typeof remote.taken==='object')?remote.taken:{};
+      }else{
+        // Migrate existing localStorage data on first connection.
+        return fbRef.set({meds:meds,taken:taken}).then(function(){return null;});
+      }
+      return null;
+    }).then(function(){
+      localCacheSave();fbLoading=false;fbReady=true;render();
+      fbStatus('● Firebase เชื่อมต่อแล้ว',true);
+      if(fbListener) fbRef.off('value',fbListener);
+      fbListener=function(snapshot){
+        if(fbLoading || !fbReady) return;
+        var data=snapshot.val()||{};
+        fbLoading=true;
+        meds=normalizeMeds(data.meds);
+        taken=(data.taken && typeof data.taken==='object')?data.taken:{};
+        localCacheSave();fbLoading=false;render();
+      };
+      fbRef.on('value',fbListener,function(error){
+        fbStatus('● อ่าน Firebase ไม่สำเร็จ',false);
+        console.error('Firebase read:',error);
+      });
+    }).catch(function(error){
+      fbLoading=false;fbReady=false;
+      fbStatus('● โหลด Firebase ไม่สำเร็จ',false);
+      console.error('Firebase load:',error);
+    });
+  });
+}
+function key(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function save(){
+  localCacheSave();
+  if(!fbUid || !fbRef || !fbReady || fbLoading) return;
+  fbRef.update({meds:meds,taken:taken}).then(function(){
+    fbStatus('● บันทึก Firebase แล้ว',true);
+  }).catch(function(error){
+    fbStatus('● บันทึก Firebase ไม่สำเร็จ',false);
+    console.error('Firebase write:',error);
+    toast('บันทึกออนไลน์ไม่สำเร็จ ตรวจสอบ Firebase Rules/อินเทอร์เน็ต');
+  });
+}
+function toast(m){var t=$('toast');t.textContent=m;t.className='on';clearTimeout(t._t);t._t=setTimeout(function(){t.className='';},2400);}
+
+function goPage(p){
+  var s=$('p-'+p); if(!s){toast('ไม่พบหน้า '+p);return;}
+  var all=document.getElementsByClassName('page');
+  for(var i=0;i<all.length;i++) all[i].className='page';
+  s.className='page active';
+  var ns=['today','add','list','dev'];
+  for(var j=0;j<ns.length;j++) $('n-'+ns[j]).className=(ns[j]===p?'active':'');
+  window.scrollTo(0,0);
+  try{render();}catch(e){console.error(e);}
+}
+
+/* ---- เวลา ---- */
+function addTime(v){
+  v=v||$('mTime').value;
+  if(!v){toast('เลือกเวลาก่อนครับ');return;}
+  for(var i=0;i<times.length;i++) if(times[i]===v){toast('มีเวลา '+v+' อยู่แล้ว');return;}
+  times.push(v);times.sort();drawTimes();$('fErr').className='err';
+}
+function rmTime(i){times.splice(i,1);drawTimes();}
+function drawTimes(){
+  var h='';
+  for(var i=0;i<times.length;i++) h+='<span class="ttag">'+times[i]+' น. <b onclick="rmTime('+i+')">✕</b></span>';
+  $('tlist').innerHTML=h;
+}
+
+/* ---- บันทึกยา ---- */
+function saveMed(){
+  var e=$('fErr');e.className='err';$('mName').className='';
+  var name=$('mName').value.replace(/^\s+|\s+$/g,'');
+  var amt=parseFloat($('mAmt').value); if(!(amt>0))amt=1;
+  var meal=$('mMeal').value;
+  if(!name){$('mName').className='bad';$('mName').focus();e.textContent='⚠ กรุณากรอกชื่อยาก่อนบันทึก';e.className='err on';return;}
+  if(times.length===0&&$('mTime').value) times.push($('mTime').value);
+  if(times.length===0){e.textContent='⚠ กรุณาเลือกเวลาอย่างน้อย 1 เวลา';e.className='err on';return;}
+  var id=Date.now();
+  meds.push({id:id,name:name,amt:amt,meal:meal,times:times.slice()});
+  flash=id; $('mName').value='';$('mAmt').value=1;times=[];drawTimes();
+  save();render();
+  toast('เพิ่ม "'+name+'" ลงตารางแล้ว ✓');
+  goPage('today');
+  setTimeout(function(){flash=null;render();},2600);
+}
+function delMed(id){
+  if(!confirm('ลบยานี้ออกจากระบบ?'))return;
+  var a=[];for(var i=0;i<meds.length;i++) if(meds[i].id!==id) a.push(meds[i]);
+  meds=a;save();render();toast('ลบแล้ว');
+}
+
+/* ---- ตาราง ---- */
+function sched(){
+  var l=[];
+  for(var i=0;i<meds.length;i++){var m=meds[i],t=m.times||[];
+    for(var j=0;j<t.length;j++) l.push({id:m.id,name:m.name,amt:m.amt,meal:m.meal,time:t[j],k:m.id+'_'+t[j]});}
+  l.sort(function(a,b){return a.time<b.time?-1:1;});
+  return l;
+}
+function take(k){var d=key();if(!taken[d])taken[d]={};taken[d][k]=!taken[d][k];save();render();}
+function resetToday(){delete taken[key()];save();render();toast('รีเซ็ตแล้ว');}
+function slot(t){var h=parseInt(t.split(':')[0],10);return h<11?0:h<15?1:h<20?2:3;}
+function mins(t){var p=t.split(':');return parseInt(p[0],10)*60+parseInt(p[1],10);}
+
+function render(){
+  var now=new Date(),nm=now.getHours()*60+now.getMinutes();
+  var tk=taken[key()]||{},s=sched(),i,h;
+  $('dt').textContent=now.toLocaleDateString('th-TH',{day:'numeric',month:'short'});
+  $('c1').textContent=meds.length+' รายการ'; $('c2').textContent=meds.length+' รายการ';
+
+  h='';
+  for(i=0;i<s.length;i++){
+    var x=s[i],dn=!!tk[x.k],lt=!dn&&mins(x.time)<nm;
+    h+='<tr class="'+(dn?'done ':'')+(lt?'late ':'')+(x.id===flash?'flash':'')+'">'
+      +'<td class="tm">'+x.time+'</td><td class="nm">'+esc(x.name)+'</td>'
+      +'<td class="ct">'+x.amt+' เม็ด</td><td>'+esc(x.meal)+'</td>'
+      +'<td><span class="bdg '+(dn?'d':lt?'l':'w')+'">'+(dn?'✓ กินแล้ว':lt?'ยังไม่กินยา':'รอถึงเวลา')+'</span></td>'
+      +'<td><button type="button" class="mini'+(dn?' un':'')+'" onclick="take(\''+x.k+'\')">'+(dn?'ยกเลิก':'กินแล้ว')+'</button></td></tr>';
+  }
+  $('tbSched').innerHTML=h||'<tr><td colspan="6"><div class="empty">💊<br>ยังไม่มียาในระบบ<br>ไปเมนู “เพิ่มยา” เพื่อลงทะเบียน</div></td></tr>';
+
+  h='';
+  for(i=0;i<meds.length;i++){
+    var m=meds[i],c=[0,0,0,0],t=m.times||[],j,sum=0;
+    for(j=0;j<t.length;j++) c[slot(t[j])]+=m.amt;
+    h+='<tr><td class="nm">'+esc(m.name)+'</td>';
+    for(j=0;j<4;j++){sum+=c[j];h+='<td class="ct">'+(c[j]?'<span class="dot"></span> <b>'+c[j]+'</b>':'–')+'</td>';}
+    h+='<td class="ct"><b style="color:#2b7a67">'+sum+'</b> เม็ด</td></tr>';
+  }
+  $('tbMx').innerHTML=h||'<tr><td colspan="6"><div class="empty">ยังไม่มีข้อมูล</div></td></tr>';
+
+  h='';
+  for(i=0;i<meds.length;i++){var a=meds[i];
+    h+='<tr class="'+(a.id===flash?'flash':'')+'"><td>'+(i+1)+'</td><td class="nm">'+esc(a.name)+'</td>'
+      +'<td class="ct">'+a.amt+' เม็ด</td><td>'+esc(a.meal)+'</td><td>'+(a.times||[]).join(' น., ')+' น.</td>'
+      +'<td><button type="button" class="mini del" onclick="delMed('+a.id+')">ลบ</button></td></tr>';}
+  $('tbAdd').innerHTML=h||'<tr><td colspan="6"><div class="empty">ยังไม่มียาที่ลงทะเบียน</div></td></tr>';
+
+  h='';
+  for(i=0;i<meds.length;i++){var b=meds[i];
+    h+='<tr><td class="nm">'+esc(b.name)+'</td><td class="ct">'+b.amt+'</td><td>'+esc(b.meal)+'</td>'
+      +'<td>'+(b.times||[]).join(', ')+'</td><td class="ct">'+(b.times||[]).length+'</td>'
+      +'<td><button type="button" class="mini del" onclick="delMed('+b.id+')">ลบ</button></td></tr>';}
+  $('tbList').innerHTML=h||'<tr><td colspan="6"><div class="empty">ยังไม่มียาในระบบ</div></td></tr>';
+
+  var nx=null;
+  for(i=0;i<s.length;i++) if(mins(s[i].time)>=nm&&!tk[s[i].k]){nx=s[i];break;}
+  if(!s.length){$('nxName').textContent='—';$('nxInfo').textContent='ยังไม่มีรายการยาในระบบ';}
+  else if(nx){var d=mins(nx.time)-nm;
+    $('nxName').textContent=nx.name;
+    $('nxInfo').textContent=nx.time+' น. · '+nx.amt+' เม็ด · '+nx.meal+' · อีก '+Math.floor(d/60)+' ชม. '+(d%60)+' นาที';}
+  else{$('nxName').textContent='ครบแล้ววันนี้ 🎉';$('nxInfo').textContent='ไม่มีมื้อยาที่ต้องกินเพิ่มแล้ว';}
+}
+
+/* ---- เสียง ---- */
+var ac;
+function beep(n){n=n||5;
+  try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
+    for(var i=0;i<n;i++){var t=ac.currentTime+i*.45,o=ac.createOscillator(),g=ac.createGain();
+      o.type='sine';o.frequency.setValueAtTime(880,t);o.frequency.setValueAtTime(1180,t+.16);
+      g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.35,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+.32);
+      o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+.34);}}catch(e){}
+  if(navigator.vibrate)navigator.vibrate([300,150,300,150,300]);}
+function askNoti(){if(!window.Notification){toast('เบราว์เซอร์ไม่รองรับ');return;}
+  Notification.requestPermission().then(function(p){toast(p==='granted'?'เปิดแจ้งเตือนแล้ว ✓':'ถูกปฏิเสธ');});}
+
+/* ---- Bluetooth ---- */
+var dev=null,chr=null,SVC='0000ffe0-0000-1000-8000-00805f9b34fb',CHR='0000ffe1-0000-1000-8000-00805f9b34fb';
+function connectBLE(){
+  if(!navigator.bluetooth){toast('ต้องใช้ Chrome และเปิดผ่าน HTTPS');return;}
+  navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:[SVC]})
+  .then(function(d){dev=d;d.addEventListener('gattserverdisconnected',function(){setBle(false);});return d.gatt.connect();})
+  .then(function(sv){return sv.getPrimaryService(SVC).then(function(x){return x.getCharacteristic(CHR);})
+    .then(function(c){chr=c;}).catch(function(){chr=null;});})
+  .then(function(){setBle(true,(dev&&dev.name)||'กล่องยา');toast('เชื่อมต่อสำเร็จ ✓');})
+  .catch(function(){toast('เชื่อมต่อไม่สำเร็จ');});
+}
+function disconnectBLE(){if(dev&&dev.gatt.connected)dev.gatt.disconnect();setBle(false);toast('ตัดการเชื่อมต่อแล้ว');}
+function setBle(on,n){n=n||'';
+  // แสดงสถานะ Bluetooth ในหน้าตั้งค่าอุปกรณ์ ไม่ทับสถานะ Firebase ที่หัวเว็บ
+  $('devName').textContent=on?'เชื่อมต่อแล้ว: '+n:'ยังไม่ได้เชื่อมต่ออุปกรณ์';
+}
+function send(c){if(!chr)return;try{chr.writeValue(new TextEncoder().encode(c+'\n'));}catch(e){}}
+function testBox(){if(!chr){toast('ยังไม่ได้เชื่อมต่อกล่องยา');return;}send('ALARM:TEST');toast('ส่งคำสั่งแล้ว');}
+
+/* ---- นาฬิกา ---- */
+setInterval(function(){
+  try{
+    var n=new Date(),hm=pad(n.getHours())+':'+pad(n.getMinutes()),tk=taken[key()]||{},s=sched();
+    if($('alarm').className!=='on'){
+      for(var i=0;i<s.length;i++){var z=snz[s[i].k];
+        if((s[i].time===hm||(z&&Date.now()>=z))&&!tk[s[i].k]){fire(s[i]);break;}}
+    }
+    render();
+  }catch(e){console.error(e);}
+},15000);
+
+function fire(s){cur=s;$('aName').textContent=s.name;$('aAmt').textContent='จำนวน '+s.amt+' เม็ด';
+  $('aNote').textContent=s.meal+' · เวลา '+s.time+' น.';$('alarm').className='on';
+  delete snz[s.k];beep(6);send('ALARM:'+s.name+':'+s.amt);
+  if(window.Notification&&Notification.permission==='granted')
+    new Notification('⏰ ถึงเวลากินยา',{body:s.name+' · '+s.amt+' เม็ด · '+s.meal});}
+function aTake(){if(cur)take(cur.k);close_();toast('บันทึกว่ากินยาแล้ว ✓');}
+function aSnooze(){if(cur)snz[cur.k]=Date.now()+300000;close_();toast('เลื่อนไปอีก 5 นาที');}
+function close_(){$('alarm').className='';send('ALARM:OFF');cur=null;}
+
+document.addEventListener('click',function u(){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume();}catch(e){}document.removeEventListener('click',u);});
+drawTimes();render();fbStart();
+</script>
+</body>
+</html>
+
+```
